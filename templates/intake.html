@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intake Form</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+body {
+    background-color: #15202B;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+button {
+    background-color: #1d9bf0;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1778c2;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hey {{ athlete_name }}, please answer some questions so we can build you a training plan!</h1>
+        <form action="{{ url_for('intake') }}" method="POST">
+            <div class="form-group">
+                <label for="athlete_type">What is your main sport?</label>
+                <select id="athlete_type" name="athlete_type" required>
+                    <option value="">Select</option>
+                    <option value="Cyclist">Cyclist</option>
+                    <option value="Runner">Runner</option>
+                    <option value="Triathlete">Triathlete</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="training_type">How do you prefer to train?</label>
+                <select id="training_type" name="training_type" required>
+                    <option value="">Select</option>
+                    <option value="Polarized">Polarized</option>
+                    <option value="Pyramidal">Pyramidal</option>
+                    <option value="Not sure">Not sure</option>
+                </select>
+            </div>
+            
+            
+            <!--<div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+            <div class="form-group">
+                <label for="service">Select Service:</label>
+                <select id="service" name="service" required>
+                    <option value="">Select a service</option>
+                    <option value="service1">Service 1</option>
+                    <option value="service2">Service 2</option>
+                    <option value="service3">Service 3</option>
+                </select>
+            </div>-->
+            <div class="form-group">
+                <label for="message">Is there anything else you want PlanBuilder to know about?</label>
+                <textarea id="message" name="message" rows="5"></textarea>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
