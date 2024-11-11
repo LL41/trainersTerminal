@@ -25,7 +25,7 @@ genai.configure(api_key=os.getenv("GENAI_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Redirect URI for OAuth
-redirect_uri = 'http://127.0.0.1:5000/auth/callback'
+redirect_uri = 'https://trainer-terminal-bee0e2ad6ae5.herokuapp.com'
 
 def trips_around_world(distance):
   earth_circumference = 24901  # miles
