@@ -1,4 +1,4 @@
-from app import strava_flask_app
+from main import strava_flask_app
 from flask import Flask
 
 app = strava_flask_app()
