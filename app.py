@@ -11,7 +11,6 @@ import google.generativeai as genai
 import markdown
 
 load_dotenv()
-
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")  # Replace with a strong secret key
 
@@ -25,8 +24,7 @@ genai.configure(api_key=os.getenv("GENAI_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Redirect URI for OAuth
-redirect_uri = 'https://trainer-terminal-9206aadf1c4e.herokuapp.com/auth/callback'
-#redirect_uri = 'https://127.0.0.1:5000/auth/callback'
+redirect_uri = 'https://127.0.0.1:5000/auth/callback'
 
 def trips_around_world(distance):
   earth_circumference = 24901  # miles
@@ -203,3 +201,6 @@ def logout():
     session.pop('athlete_initialized', None)
     session.pop('athlete_type',None)
     return redirect(url_for('index'))
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
