@@ -24,7 +24,8 @@ genai.configure(api_key=os.getenv("GENAI_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Redirect URI for OAuth
-redirect_uri = 'https://127.0.0.1:5000/auth/callback'
+#redirect_uri = 'https://127.0.0.1:5000/auth/callback'
+redirect_uri = 'https://45.63.19.39/auth/callback'
 
 def trips_around_world(distance):
   earth_circumference = 24901  # miles
