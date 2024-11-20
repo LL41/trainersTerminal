@@ -63,25 +63,26 @@ button:hover {
 </head>
 <body>
     <div class="container">
-        <h1>Hey {{ athlete_name }}, please answer some questions so we can build you a training plan!</h1>
+        <h1>Hey {{ athlete_name }}, what do you want to download?</h1>
         <form action="{{ url_for('intake') }}" method="POST">
             <div class="form-group">
-                <label for="athlete_type">What is your main sport?</label>
-                <select id="athlete_type" name="athlete_type" required>
+                <label for="data_type">Activity Types</label>
+                <select id="data_type" name="data_type" required>
                     <option value="">Select</option>
-                    <option value="Cyclist">Cyclist</option>
-                    <option value="Runner">Runner</option>
-                    <option value="Triathlete">Triathlete</option>
+                    <option value="All">All</option>
+                    <option value="Cycling">Cycling</option>
+                    <option value="Running">Running</option>
+                    <option value="Swimming">Swimming</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="training_type">How do you prefer to train?</label>
-                <select id="training_type" name="training_type" required>
+                <label for="date_range">Date Range</label>
+                <select id="date_range" name="date_range" required>
                     <option value="">Select</option>
-                    <option value="Polarized">Polarized</option>
-                    <option value="Pyramidal">Pyramidal</option>
-                    <option value="Not sure">Not sure</option>
+                    <option value="All">All Time</option>
+                    <option value="last_yaer">Last Year</option>
+                    <option value="last_month">Last Month</option>
                 </select>
             </div>
             
@@ -107,10 +108,6 @@ button:hover {
                     <option value="service3">Service 3</option>
                 </select>
             </div>-->
-            <div class="form-group">
-                <label for="message">Is there anything else you want PlanBuilder to know about?</label>
-                <textarea id="message" name="message" rows="5"></textarea>
-            </div>
             <button type="submit">Submit</button>
         </form>
     </div>

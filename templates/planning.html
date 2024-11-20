@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,11 +59,10 @@
         background-color: #1778c2;
     }
         </style>
-    </head>
 </head>
 <body>
-    <h1>Gemini Response</h1>
-    <p>{{ gemeni_response|safe }}</p>
+    <h1>Your Data</h1>
+    <p>{{ supplied_data }}</p>
     <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
 </body>
 </html>
