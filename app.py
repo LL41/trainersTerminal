@@ -109,7 +109,7 @@ def planning():
     total_distance = round(session['total_distance'])
 
     #From data
-    athlete_type = session['athlete_type']
+    athlete_type = session['data_type']
     training_type = session['training_type']
     supplied_data = athlete_type
     print(athlete_type)
