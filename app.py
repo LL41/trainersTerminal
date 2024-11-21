@@ -93,6 +93,7 @@ def intake():
     if request.method == 'POST':
         session['data_type'] = request.form['data_type']
         session['date_range'] = request.form['date_range']
+        session['hr_checkbox'] = request.form['hr_checkbox']
         return redirect(url_for('planning'))
     else:
         pass
@@ -111,8 +112,10 @@ def planning():
     #From data
     athlete_type = session['data_type']
     training_type = session['training_type']
-    supplied_data = athlete_type
+    form_message = session['message']
     print(athlete_type)
+    print(hr_checkbox)
+
 
     template = render_template('planning.html', supplied_data=supplied_data)
     return template
@@ -131,7 +134,7 @@ def index():
     return render_template('index.html')
 
 #Currently unused.
-@app.route('/get_data/<activity_type>')
+@app.route('/get_data/<activity_type>')ß
 def get_data(activity_type):
     if activity_type == 'ride':
         data = get_distance_data(session['ride_miles'])
