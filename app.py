@@ -112,7 +112,7 @@ def planning():
     #From data
     athlete_type = session['data_type']
     training_type = session['training_type']
-    form_message = session['message']
+    hr_checkbox = session['hr_checkbox']
     print(athlete_type)
     print(hr_checkbox)
 
