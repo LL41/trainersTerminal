@@ -93,7 +93,10 @@ def intake():
     if request.method == 'POST':
         session['data_type'] = request.form['data_type']
         session['date_range'] = request.form['date_range']
-        session['hr_checkbox'] = request.form['hr_checkbox']
+        if request.form.get('hr_checkbox') == "True":
+            session['hr_checkbox'] = True
+        else:
+            session['hr_checkbox'] = False
         return redirect(url_for('planning'))
     else:
         pass
@@ -110,10 +113,11 @@ def planning():
     total_distance = round(session['total_distance'])
 
     #From data
-    athlete_type = session['data_type']
+    data_type = session['data_type']
     training_type = session['training_type']
     hr_checkbox = session['hr_checkbox']
-    print(athlete_type)
+    supplied_data = data_type
+    print(data_type)
     print(hr_checkbox)
 
 
