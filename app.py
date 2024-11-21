@@ -134,7 +134,7 @@ def index():
     return render_template('index.html')
 
 #Currently unused.
-@app.route('/get_data/<activity_type>')ß
+@app.route('/get_data/<activity_type>')
 def get_data(activity_type):
     if activity_type == 'ride':
         data = get_distance_data(session['ride_miles'])
