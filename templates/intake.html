@@ -65,7 +65,7 @@ button:hover {
     <div class="container">
         <h1>Hey {{ athlete_name }}, what do you want to download?</h1>
         <form action="{{ url_for('intake') }}" method="POST">
-            <div class="form-group">
+            <div class="form-group dropdowns">
                 <label for="data_type">Activity Types</label>
                 <select id="data_type" name="data_type" required>
                     <option value="">Select</option>
@@ -76,7 +76,7 @@ button:hover {
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group dropdowns">
                 <label for="date_range">Date Range</label>
                 <select id="date_range" name="date_range" required>
                     <option value="">Select</option>
@@ -86,11 +86,30 @@ button:hover {
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group checkboxes">
+                <h3>Data to Include:</h3>
                 <label for="hr_checkbox">Heart Rate Data</label>
                 <input type="checkbox" name="hr_checkbox" value=True checked>
-            </div>
             
+                <label for="power_checkbox">Power Data</label>
+                <input type="checkbox" name="power_checkbox" value=True checked>
+
+                <label for="speed_checkbox">Speed Data</label>
+                <input type="checkbox" name="speed_checkbox" value=True checked>
+
+                <label for="sufferscore_checkbox">Suffer Score Data</label>
+                <input type="checkbox" name="sufferscore_checkbox" value=True checked>
+
+                <!--https://stackoverflow.com/questions/68457696/strava-api-to-export-gpx-file-of-activity-->
+                <label for="GPS_checkbox">GPS Data</label>
+                <input type="checkbox" name="gpsdata_checkbox" value=True checked>
+
+                <label for="pacedata_checkbox">Pace Data</label>
+                <input type="checkbox" name="gpsdata_checkbox" value=True checked>
+
+                <label for="elevationdata_checkbox">Elevation Data</label>
+                <input type="checkbox" name="elevationdata_checkbox" value=True checked>
+            </div>
             
             <!--<div class="form-group">
                 <label for="name">Name:</label>

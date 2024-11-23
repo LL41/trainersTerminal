@@ -16,6 +16,9 @@ app.secret_key = os.getenv("SECRET_KEY")  # Replace with a strong secret key
 client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 data_storage = []
+checkbox_list = ['hr_checkbox','power_checkbox','speed_checkbox'
+                     ,'sufferscore_checkbox','GPS_checkbox'
+                     ,'pacedata_checkbox','elevationdata_checkbox']
 
 #Redirect URI for OAuth
 redirect_uri = 'http://127.0.0.1:5000/auth/callback'
@@ -88,15 +91,15 @@ def intake():
     except KeyError:
         session.pop('athlete_initialized', None)
         return redirect(url_for('index'))
-
     #Get form information.
     if request.method == 'POST':
         session['data_type'] = request.form['data_type']
         session['date_range'] = request.form['date_range']
-        if request.form.get('hr_checkbox') == "True":
-            session['hr_checkbox'] = True
-        else:
-            session['hr_checkbox'] = False
+        for checkbox in checkbox_list:
+            if request.form.get(checkbox) == "True":
+                session[checkbox] = True
+            else:
+                session[checkbox] = False
         return redirect(url_for('planning'))
     else:
         pass
@@ -115,10 +118,11 @@ def planning():
     #From data
     data_type = session['data_type']
     training_type = session['training_type']
-    hr_checkbox = session['hr_checkbox']
+    session['hr_checkbox']
     supplied_data = data_type
     print(data_type)
-    print(hr_checkbox)
+    print(session['hr_checkbox'])
+    print(session['GPS_checkbox'])
 
 
     template = render_template('planning.html', supplied_data=supplied_data)
