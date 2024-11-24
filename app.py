@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
-from flask import Flask, redirect, url_for, session, render_template, request
-from datetime import datetime, timedelta
+from flask import Flask, redirect, url_for, session, render_template, request, Response
+import pandas as pd
+from datetime import datetime, timedelta, date
 from urllib.parse import urlparse, parse_qs
 import stravalib
 from stravalib import unithelper
@@ -24,46 +25,78 @@ checkbox_list = ['hr_checkbox','power_checkbox','speed_checkbox'
 redirect_uri = 'http://127.0.0.1:5000/auth/callback'
 #redirect_uri = 'https://45.63.19.39/auth/callback'
 
-def trips_around_world(distance):
-  earth_circumference = 24901  # miles
-  return round((distance / earth_circumference)*100,2)
-
 today = datetime.today()
-tomorrow = today + timedelta(days=1)
-tomorrow = tomorrow.strftime("%Y-%m-%d")
+last_year = today - timedelta(days=365)
+last_year = last_year.strftime("%Y-%m-%d")
 
-def get_all_activity_data():
+one_week_ago = today - timedelta(days=7)
+one_week_ago = one_week_ago.strftime("%Y-%m-%d")
+
+one_month_ago = today - timedelta(days=30)
+one_month_ago = one_month_ago.strftime("%Y-%m-%d")
+
+def division(x, y):
+    return x/y if y else 0
+
+def getRecentActivites(time):
     client = stravalib.Client(access_token=session['access_token'])
-    most_recent_activity = client.get_activities(before=tomorrow)
-    distance = 0
-    for data in most_recent_activity:
-        #most_recent_activity_id = data.id
-        #full_data = data
-        #elapsed_time = data.elapsed_time
-        #distance = data.distance
-        distance = distance + float(unithelper.miles(data.distance))
-    return distance
+    activities = client.get_activities(after=time)
+    return activities
 
-def get_distance_data(distance):
-    distance_data = {
-        "total_distance": round(distance),
-        "progress_percentage": trips_around_world(distance),
-        "miles_left": 24901 - round(distance,2)
-    }
-    return distance_data
+def generate_table(date_range,data_type,measurment_system):
+    activities = getRecentActivites(date_range)
+
+    data = [
+    (result.id, result.name, result.start_date_local, result.elapsed_time, result.moving_time,
+     result.average_watts, result.max_watts, result.average_cadence,
+     round(float(unithelper.miles(result.distance).magnitude), 2),
+     round(float(unithelper.kilometers(result.distance).magnitude), 2),
+     division(((result.moving_time)/60), float(unithelper.miles(result.distance).magnitude)),
+     division(((result.moving_time)/60), float(unithelper.kilometers(result.distance).magnitude)),
+     result.sport_type, result.average_heartrate, result.max_heartrate,
+     round(float(unithelper.feet(result.total_elevation_gain).magnitude), 2),
+     round(float(unithelper.meters(result.total_elevation_gain).magnitude), 2),
+     result.suffer_score,
+     round(float(unithelper.miles_per_hour(result.average_speed).magnitude), 2),
+     round(float(unithelper.miles_per_hour(result.max_speed).magnitude), 2),
+     round(float(unithelper.kilometers_per_hour(result.average_speed).magnitude), 2),
+     round(float(unithelper.kilometers_per_hour(result.max_speed).magnitude), 2))
+     for result in activities
+    ]
+
+    df = pd.DataFrame(data, columns=[
+        'id', 'name', 'start_date_local', 'elapsed_time_seconds', 'moving_time_seconds',
+        'average_watts', 'max_watts', 'average_cadence', 'distance_miles', 'distance_kilometers',
+        'minutes_per_mile_pace', 'minutes_per_kilometer_pace', 'sport_type', 'average_heartrate',
+        'max_heartrate', 'total_elevation_gain_feet', 'total_elevation_gain_meters', 'suffer_score',
+        'average_speed_mph', 'max_speed_mph', 'average_speed_kmh', 'max_speed_kmh'
+    ])
+
+    if data_type == 'Cycling':
+        df = df.query('sport_type.str.contains("Ride")')
+    elif data_type == 'Running':
+        df = df.query('sport_type.str.contains("Run")')
+    elif data_type == 'Swimming':
+        df = df.query('sport_type.str.contains("Swim")')
+    else:
+        df = df
+
+    if measurment_system == 'imperial':
+        df = df.drop(['distance_kilometers', 'minutes_per_kilometer_pace'
+                      ,'total_elevation_gain_meters','average_speed_kmh','max_speed_kmh'], axis=1)
+    else:
+        df = df.drop(['distance_miles', 'minutes_per_mile_pace'
+                      ,'total_elevation_gain_feet','average_speed_mph','max_speed_mph'], axis=1)
+
+    return df
 
 
 def get_initial_athlete():
     client = stravalib.Client(access_token=session['access_token'])
     athlete = client.get_athlete()
-    athlete_stats = client.get_athlete_stats()
-    ride_miles = round(float(unithelper.miles(athlete_stats.all_ride_totals.distance).magnitude),2)
-    run_miles = round(float(unithelper.miles(athlete_stats.all_run_totals.distance).magnitude),2)
-    swim_miles = round(float(unithelper.miles(athlete_stats.all_swim_totals.distance).magnitude),2)
     athlete_name = athlete.firstname
-    total_distance = get_all_activity_data()
     session['athlete_initialized'] = 'True'
-    return ride_miles, run_miles, swim_miles, athlete_name, total_distance
+    return athlete_name
 
 
 ########FLASK APP
@@ -74,107 +107,64 @@ def intake():
         print("redirect")
         return redirect(url_for('index'))
     #Need to add in error handling for error code 500 when code being used is old, should redirect to auth if code is old and log user out.
-    #Get name
     
-     #Load athlete data.
+    #Initialize athlete. Get name.
     if 'athlete_initialized' not in session:
-        session['ride_miles'], session['run_miles'], session['swim_miles'], session['athlete_name'], session['total_distance'] = get_initial_athlete()
+        session['athlete_name'] = get_initial_athlete()
     else:
         pass
-    
-    try:
-        ride_miles = session['ride_miles']
-        run_miles = session['run_miles']
-        swim_miles = session['swim_miles']
-        athlete_name = session['athlete_name']
-        total_distance = session['total_distance']
-    except KeyError:
-        session.pop('athlete_initialized', None)
-        return redirect(url_for('index'))
+
     #Get form information.
     if request.method == 'POST':
-        session['data_type'] = request.form['data_type']
-        session['date_range'] = request.form['date_range']
-        for checkbox in checkbox_list:
-            if request.form.get(checkbox) == "True":
-                session[checkbox] = True
-            else:
-                session[checkbox] = False
-        return redirect(url_for('planning'))
+        data_type = request.form['data_type']
+        date_range = request.form['date_range']
+        measurment_system = request.form['measurment_system']
+
+        date_ranges = {
+        'last_year': last_year,
+        'last_month': one_month_ago,
+        'last_week': one_week_ago,
+        'All':None
+        }
+
+        df = generate_table(date_ranges[f'{date_range}'],data_type,measurment_system)
+
+        csv_data = df.to_csv(index=False)
+
+        #Send the CSV data as a response with appropriate headers
+        return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=trainersterminal_data.csv"}
+        )
     else:
         pass
 
-    return render_template('intake.html', athlete_name=athlete_name)
-
-#This will be page after intake
-@app.route('/planning')
-def planning():
-    ride_miles = round(session['ride_miles'])  
-    run_miles = round(session['run_miles'])
-    swim_miles = round(session['swim_miles'])
-    athlete_name = session['athlete_name']
-    total_distance = round(session['total_distance'])
-
-    #From data
-    data_type = session['data_type']
-    training_type = session['training_type']
-    session['hr_checkbox']
-    supplied_data = data_type
-    print(data_type)
-    print(session['hr_checkbox'])
-    print(session['GPS_checkbox'])
-
-
-    template = render_template('planning.html', supplied_data=supplied_data)
-    return template
+    return render_template('intake.html', athlete_name=session['athlete_name'])
 
 @app.route('/')
 def index():
     if 'access_token' in session:
-        print("redirect")
         return redirect(url_for('intake'))
     else:
         pass
 
-    #activity = client.get_activity(most_recent_activity_id)
-    #kudoscount = activity.kudos_count
-
     return render_template('index.html')
-
-#Currently unused.
-@app.route('/get_data/<activity_type>')
-def get_data(activity_type):
-    if activity_type == 'ride':
-        data = get_distance_data(session['ride_miles'])
-    elif activity_type == 'run':
-        data = get_distance_data(session['run_miles'])
-    elif activity_type == 'all':
-        data = get_distance_data(session['total_distance'])
-    else:
-        return 'Error'
-
-    return data
 
 @app.route('/authorize')
 def authorize():
     client = stravalib.Client()
     url = client.authorization_url(client_id, redirect_uri, scope='activity:read')
-    print("redirect2")
     return redirect(url)
 
 @app.route('/auth/callback')
 def callback():
-    print("Callback accesed")
-
     current_url = request.url
     parsed_url = urlparse(current_url)
     query_params = parse_qs(parsed_url.query)
     code = query_params['code'][0]
-    print(code)
     client = stravalib.Client()
     access_token = client.exchange_code_for_token(client_id, client_secret, code)
-    #Only print for troubleshooting, dont use in dev.
-    #print(access_token)
     session['access_token'] = access_token['access_token']
     return redirect(url_for('intake'))
 
@@ -182,7 +172,7 @@ def callback():
 def logout():
     session.pop('access_token', None)
     session.pop('athlete_initialized', None)
-    session.pop('athlete_type',None)
+    session.pop('athlete_name', None)
     return redirect(url_for('index'))
 
 if __name__ == "__main__":

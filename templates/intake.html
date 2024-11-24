@@ -3,61 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intake Form</title>
+    <title>TrainersTerminal</title>
     <link rel="stylesheet" href="style.css">
     <style>
 body {
-    background-color: #15202B;
-    color: #fff;
-    font-family: 'Montserrat', sans-serif;
+    background-color: #000;
+    color: #ffffff;
+    font-family: monospace;
 }
 
 .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 40px;
-    text-align: center;
+    padding: 20px;
 }
 
 h1 {
-    font-size: 36px;
-    font-weight: 700;
-    margin-bottom: 20px;
+    color: #ffffff;
+    text-align: center;
 }
 
 form {
-    text-align: left;
+    text-align: center;
 }
 
 .form-group {
-    margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 label {
-    display: block;
-    font-weight: bold;
+    color: #ffffff;
     margin-bottom: 5px;
 }
 
+.form-group select {
+  width: 200px;
+}
+
 input, textarea, select {
-    width: 100%;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 18px;
+    background-color: #000;
+    color: #ffffff;
+    padding: 5px;
 }
 
 button {
-    background-color: #1d9bf0;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+    background-color: #ffffff;
+    color: #000;
+    border: 1px solid #ffffff;
+    padding: 5px 10px;
 }
 
-button:hover {
-    background-color: #1778c2;
+a {
+  text-decoration: none;
+  color: inherit;
 }
     </style>
 </head>
@@ -81,58 +80,22 @@ button:hover {
                 <select id="date_range" name="date_range" required>
                     <option value="">Select</option>
                     <option value="All">All Time</option>
-                    <option value="last_yaer">Last Year</option>
-                    <option value="last_month">Last Month</option>
+                    <option value="last_year">One Year From Today</option>
+                    <option value="last_month">One Month From Today</option>
+                    <option value="last_week">One Week From Today</option>
                 </select>
             </div>
 
-            <div class="form-group checkboxes">
-                <h3>Data to Include:</h3>
-                <label for="hr_checkbox">Heart Rate Data</label>
-                <input type="checkbox" name="hr_checkbox" value=True checked>
-            
-                <label for="power_checkbox">Power Data</label>
-                <input type="checkbox" name="power_checkbox" value=True checked>
-
-                <label for="speed_checkbox">Speed Data</label>
-                <input type="checkbox" name="speed_checkbox" value=True checked>
-
-                <label for="sufferscore_checkbox">Suffer Score Data</label>
-                <input type="checkbox" name="sufferscore_checkbox" value=True checked>
-
-                <!--https://stackoverflow.com/questions/68457696/strava-api-to-export-gpx-file-of-activity-->
-                <label for="GPS_checkbox">GPS Data</label>
-                <input type="checkbox" name="gpsdata_checkbox" value=True checked>
-
-                <label for="pacedata_checkbox">Pace Data</label>
-                <input type="checkbox" name="gpsdata_checkbox" value=True checked>
-
-                <label for="elevationdata_checkbox">Elevation Data</label>
-                <input type="checkbox" name="elevationdata_checkbox" value=True checked>
-            </div>
-            
-            <!--<div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number:</label>
-                <input type="tel" id="phone" name="phone" required>
-            </div>
-            <div class="form-group">
-                <label for="service">Select Service:</label>
-                <select id="service" name="service" required>
-                    <option value="">Select a service</option>
-                    <option value="service1">Service 1</option>
-                    <option value="service2">Service 2</option>
-                    <option value="service3">Service 3</option>
+            <div class="form-group dropdowns">
+                <label for="measurment_system">Measurment System</label>
+                <select id="measurment_system" name="measurment_system" required>
+                    <option value="">Select</option>
+                    <option value="imperial">Imperial</option>
+                    <option value="metric">Metric</option>
                 </select>
-            </div>-->
-            <button type="submit">Submit</button>
+            </div>
+            <button type="submit">Download</button>
+            <button type="submit"><a href="{{ url_for('logout') }}">Logout</a></button>
         </form>
     </div>
 </body>
