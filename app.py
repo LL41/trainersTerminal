@@ -134,11 +134,7 @@ def intake():
     if request.method == 'POST':
         session['data_type'] = request.form['data_type']
         session['date_range'] = request.form['date_range']
-        for checkbox in checkbox_list:
-            if request.form.get(checkbox) == "True":
-                session[checkbox] = True
-            else:
-                session[checkbox] = False
+        session['measurment_system'] = request.form['measurment_system']
         return redirect(url_for('planning'))
     else:
         pass
@@ -151,11 +147,8 @@ def planning():
     #Form data
     data_type = session['data_type']
     training_type = session['training_type']
-    session['hr_checkbox']
     supplied_data = data_type
     print(data_type)
-    print(session['hr_checkbox'])
-    print(session['GPS_checkbox'])
 
 
     template = render_template('planning.html', supplied_data=supplied_data)
