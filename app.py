@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, redirect, url_for, session, render_template, request
+import pandas as pd
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, parse_qs
 import stravalib
@@ -24,46 +25,94 @@ checkbox_list = ['hr_checkbox','power_checkbox','speed_checkbox'
 redirect_uri = 'http://127.0.0.1:5000/auth/callback'
 #redirect_uri = 'https://45.63.19.39/auth/callback'
 
-def trips_around_world(distance):
-  earth_circumference = 24901  # miles
-  return round((distance / earth_circumference)*100,2)
-
 today = datetime.today()
-tomorrow = today + timedelta(days=1)
-tomorrow = tomorrow.strftime("%Y-%m-%d")
+last_year = today - timedelta(days=365)
+last_year = last_year.strftime("%Y-%m-%d")
 
-def get_all_activity_data():
+one_week_ago = today - timedelta(days=7)
+one_week_ago = one_week_ago.strftime("%Y-%m-%d")
+
+def division(x, y):
+    return x/y if y else 0
+
+def getRecentActivites(time):
     client = stravalib.Client(access_token=session['access_token'])
-    most_recent_activity = client.get_activities(before=tomorrow)
-    distance = 0
-    for data in most_recent_activity:
-        #most_recent_activity_id = data.id
-        #full_data = data
-        #elapsed_time = data.elapsed_time
-        #distance = data.distance
-        distance = distance + float(unithelper.miles(data.distance))
-    return distance
+    activities = client.get_activities(after=time)
+    return activities
 
-def get_distance_data(distance):
-    distance_data = {
-        "total_distance": round(distance),
-        "progress_percentage": trips_around_world(distance),
-        "miles_left": 24901 - round(distance,2)
-    }
-    return distance_data
+def generate_table():
+    activities = getRecentActivites(one_week_ago)
+
+    id = []
+    name = []
+    start_date_local = []
+    elapsed_time_seconds = []
+    moving_time_seconds = []
+    average_speed_mph = []
+    max_speed_mph = []
+    average_speed_kmh = []
+    max_speed_kmh = []
+    average_watts = []
+    max_watts = []
+    average_cadence = []
+    distance_miles = []
+    distance_kilometers = []
+    sport_type = []
+    average_heartrate = []
+    max_heartrate = []
+    total_elevation_gain_feet = []
+    total_elevation_gain_meters = []
+    suffer_score = []
+    minutes_per_mile_pace = []
+    minutes_per_kilometer_pace = []
+
+    #Should probably make this a seperate module in flask app that the flask app calls in.
+    for results in activities:
+      id.append(results.id)
+      name.append(results.name)
+      start_date_local.append(results.start_date_local)
+      elapsed_time_seconds.append(results.elapsed_time)
+      moving_time_seconds.append(results.moving_time)
+      average_watts.append(results.average_watts)
+      max_watts.append(results.max_watts)
+      average_cadence.append(results.average_cadence)
+      distance_miles.append(round(float(unithelper.miles(results.distance).magnitude),2))
+      distance_kilometers.append(round(float(unithelper.kilometers(results.distance).magnitude),2))
+      minutes_per_mile_pace.append(round(division(((results.moving_time)/60),float(unithelper.miles(results.distance).magnitude)),2))
+      minutes_per_kilometer_pace.append(round(division(((results.moving_time)/60),float(unithelper.kilometers(results.distance).magnitude)),2))
+      sport_type.append(results.sport_type.root)
+      average_heartrate.append(results.average_heartrate)
+      max_heartrate.append(results.max_heartrate)
+      total_elevation_gain_feet.append(round(float(unithelper.feet(results.total_elevation_gain).magnitude),2))
+      total_elevation_gain_meters.append(round(float(unithelper.meters(results.total_elevation_gain).magnitude),2))
+      suffer_score.append(results.suffer_score)
+      average_speed_mph.append(round(float(unithelper.miles_per_hour(results.average_speed).magnitude),2))
+      max_speed_mph.append(round(float(unithelper.miles_per_hour(results.max_speed).magnitude),2))
+      average_speed_kmh.append(round(float(unithelper.kilometers_per_hour(results.average_speed).magnitude),2))
+      max_speed_kmh.append(round(float(unithelper.kilometers_per_hour(results.max_speed).magnitude),2))
+
+    my_dict = {'id':id, 'name':name,'start_date_local':start_date_local, 'elapsed_time_seconds':elapsed_time_seconds, 'moving_time_seconds':moving_time_seconds
+               , 'sport_type': sport_type, 'distance_miles': distance_miles, 'distance_kilometers': distance_kilometers
+               , 'average_speed_mph':average_speed_mph, 'max_speed_mph':max_speed_mph, 'average_speed_kmh':average_speed_kmh
+               , 'max_speed_kmh':max_speed_kmh
+               , 'average_watts': average_watts, 'max_watts':max_watts
+               , 'average_cadence':average_cadence
+               , 'average_heartrate':average_heartrate, 'max_heartrate': max_heartrate
+               , 'total_elevation_gain_feet': total_elevation_gain_feet, 'total_elevation_gain_meters':total_elevation_gain_meters
+               , 'suffer_score':suffer_score
+               , 'minutes_per_mile_pace':minutes_per_mile_pace, 'minutes_per_kilometer_pace':minutes_per_kilometer_pace
+               }
+
+    df = pd.DataFrame(my_dict)
+    return df
 
 
 def get_initial_athlete():
     client = stravalib.Client(access_token=session['access_token'])
     athlete = client.get_athlete()
-    athlete_stats = client.get_athlete_stats()
-    ride_miles = round(float(unithelper.miles(athlete_stats.all_ride_totals.distance).magnitude),2)
-    run_miles = round(float(unithelper.miles(athlete_stats.all_run_totals.distance).magnitude),2)
-    swim_miles = round(float(unithelper.miles(athlete_stats.all_swim_totals.distance).magnitude),2)
     athlete_name = athlete.firstname
-    total_distance = get_all_activity_data()
     session['athlete_initialized'] = 'True'
-    return ride_miles, run_miles, swim_miles, athlete_name, total_distance
+    return athlete_name
 
 
 ########FLASK APP
@@ -74,23 +123,13 @@ def intake():
         print("redirect")
         return redirect(url_for('index'))
     #Need to add in error handling for error code 500 when code being used is old, should redirect to auth if code is old and log user out.
-    #Get name
     
-     #Load athlete data.
+    #Initialize athlete. Get name.
     if 'athlete_initialized' not in session:
-        session['ride_miles'], session['run_miles'], session['swim_miles'], session['athlete_name'], session['total_distance'] = get_initial_athlete()
+        session['athlete_name'] = get_initial_athlete()
     else:
         pass
-    
-    try:
-        ride_miles = session['ride_miles']
-        run_miles = session['run_miles']
-        swim_miles = session['swim_miles']
-        athlete_name = session['athlete_name']
-        total_distance = session['total_distance']
-    except KeyError:
-        session.pop('athlete_initialized', None)
-        return redirect(url_for('index'))
+
     #Get form information.
     if request.method == 'POST':
         session['data_type'] = request.form['data_type']
@@ -104,18 +143,12 @@ def intake():
     else:
         pass
 
-    return render_template('intake.html', athlete_name=athlete_name)
+    return render_template('intake.html', athlete_name=session['athlete_name'])
 
 #This will be page after intake
 @app.route('/planning')
 def planning():
-    ride_miles = round(session['ride_miles'])  
-    run_miles = round(session['run_miles'])
-    swim_miles = round(session['swim_miles'])
-    athlete_name = session['athlete_name']
-    total_distance = round(session['total_distance'])
-
-    #From data
+    #Form data
     data_type = session['data_type']
     training_type = session['training_type']
     session['hr_checkbox']
