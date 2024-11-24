@@ -137,7 +137,6 @@ def intake():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=trainersterminal_data.csv"}
         )
-        #return redirect(url_for('planning'))
     else:
         pass
 
@@ -146,13 +145,9 @@ def intake():
 @app.route('/')
 def index():
     if 'access_token' in session:
-        print("redirect")
         return redirect(url_for('intake'))
     else:
         pass
-
-    #activity = client.get_activity(most_recent_activity_id)
-    #kudoscount = activity.kudos_count
 
     return render_template('index.html')
 
@@ -160,29 +155,24 @@ def index():
 def authorize():
     client = stravalib.Client()
     url = client.authorization_url(client_id, redirect_uri, scope='activity:read')
-    print("redirect2")
     return redirect(url)
 
 @app.route('/auth/callback')
 def callback():
-    print("Callback accesed")
-
     current_url = request.url
     parsed_url = urlparse(current_url)
     query_params = parse_qs(parsed_url.query)
     code = query_params['code'][0]
-    print(code)
     client = stravalib.Client()
     access_token = client.exchange_code_for_token(client_id, client_secret, code)
     session['access_token'] = access_token['access_token']
-    print(session['access_token'])
     return redirect(url_for('intake'))
 
 @app.route('/logout')
 def logout():
     session.pop('access_token', None)
     session.pop('athlete_initialized', None)
-    session.pop('athlete_type',None)
+    session.pop('athlete_name', None)
     return redirect(url_for('index'))
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intake Form</title>
+    <title>TrainersTerminal</title>
     <link rel="stylesheet" href="style.css">
     <style>
 body {
@@ -53,6 +53,11 @@ button {
     border: 1px solid #ffffff;
     padding: 5px 10px;
 }
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
     </style>
 </head>
 <body>
@@ -90,6 +95,7 @@ button {
                 </select>
             </div>
             <button type="submit">Download</button>
+            <button type="submit"><a href="{{ url_for('logout') }}">Logout</a></button>
         </form>
     </div>
 </body>
