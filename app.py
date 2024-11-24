@@ -32,6 +32,9 @@ last_year = last_year.strftime("%Y-%m-%d")
 one_week_ago = today - timedelta(days=7)
 one_week_ago = one_week_ago.strftime("%Y-%m-%d")
 
+one_month_ago = today - timedelta(days=30)
+one_month_ago = one_month_ago.strftime("%Y-%m-%d")
+
 def division(x, y):
     return x/y if y else 0
 
@@ -40,8 +43,8 @@ def getRecentActivites(time):
     activities = client.get_activities(after=time)
     return activities
 
-def generate_table():
-    activities = getRecentActivites(one_week_ago)
+def generate_table(date_range):
+    activities = getRecentActivites(date_range)
 
     id = []
     name = []
