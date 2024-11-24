@@ -22,8 +22,8 @@ checkbox_list = ['hr_checkbox','power_checkbox','speed_checkbox'
                      ,'pacedata_checkbox','elevationdata_checkbox']
 
 #Redirect URI for OAuth
-redirect_uri = 'http://127.0.0.1:5000/auth/callback'
-#redirect_uri = 'https://45.63.19.39/auth/callback'
+#redirect_uri = 'http://127.0.0.1:5000/auth/callback'
+redirect_uri = 'https://45.63.19.39/auth/callback'
 
 today = datetime.today()
 last_year = today - timedelta(days=365)
