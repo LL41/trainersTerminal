@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
-from flask import Flask, redirect, url_for, session, render_template, request
+from flask import Flask, redirect, url_for, session, render_template, request, Response
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from urllib.parse import urlparse, parse_qs
 import stravalib
 from stravalib import unithelper
@@ -43,70 +43,51 @@ def getRecentActivites(time):
     activities = client.get_activities(after=time)
     return activities
 
-def generate_table(date_range):
+def generate_table(date_range,data_type,measurment_system):
     activities = getRecentActivites(date_range)
 
-    id = []
-    name = []
-    start_date_local = []
-    elapsed_time_seconds = []
-    moving_time_seconds = []
-    average_speed_mph = []
-    max_speed_mph = []
-    average_speed_kmh = []
-    max_speed_kmh = []
-    average_watts = []
-    max_watts = []
-    average_cadence = []
-    distance_miles = []
-    distance_kilometers = []
-    sport_type = []
-    average_heartrate = []
-    max_heartrate = []
-    total_elevation_gain_feet = []
-    total_elevation_gain_meters = []
-    suffer_score = []
-    minutes_per_mile_pace = []
-    minutes_per_kilometer_pace = []
+    data = [
+    (result.id, result.name, result.start_date_local, result.elapsed_time, result.moving_time,
+     result.average_watts, result.max_watts, result.average_cadence,
+     round(float(unithelper.miles(result.distance).magnitude), 2),
+     round(float(unithelper.kilometers(result.distance).magnitude), 2),
+     division(((result.moving_time)/60), float(unithelper.miles(result.distance).magnitude)),
+     division(((result.moving_time)/60), float(unithelper.kilometers(result.distance).magnitude)),
+     result.sport_type, result.average_heartrate, result.max_heartrate,
+     round(float(unithelper.feet(result.total_elevation_gain).magnitude), 2),
+     round(float(unithelper.meters(result.total_elevation_gain).magnitude), 2),
+     result.suffer_score,
+     round(float(unithelper.miles_per_hour(result.average_speed).magnitude), 2),
+     round(float(unithelper.miles_per_hour(result.max_speed).magnitude), 2),
+     round(float(unithelper.kilometers_per_hour(result.average_speed).magnitude), 2),
+     round(float(unithelper.kilometers_per_hour(result.max_speed).magnitude), 2))
+     for result in activities
+    ]
 
-    #Should probably make this a seperate module in flask app that the flask app calls in.
-    for results in activities:
-      id.append(results.id)
-      name.append(results.name)
-      start_date_local.append(results.start_date_local)
-      elapsed_time_seconds.append(results.elapsed_time)
-      moving_time_seconds.append(results.moving_time)
-      average_watts.append(results.average_watts)
-      max_watts.append(results.max_watts)
-      average_cadence.append(results.average_cadence)
-      distance_miles.append(round(float(unithelper.miles(results.distance).magnitude),2))
-      distance_kilometers.append(round(float(unithelper.kilometers(results.distance).magnitude),2))
-      minutes_per_mile_pace.append(round(division(((results.moving_time)/60),float(unithelper.miles(results.distance).magnitude)),2))
-      minutes_per_kilometer_pace.append(round(division(((results.moving_time)/60),float(unithelper.kilometers(results.distance).magnitude)),2))
-      sport_type.append(results.sport_type.root)
-      average_heartrate.append(results.average_heartrate)
-      max_heartrate.append(results.max_heartrate)
-      total_elevation_gain_feet.append(round(float(unithelper.feet(results.total_elevation_gain).magnitude),2))
-      total_elevation_gain_meters.append(round(float(unithelper.meters(results.total_elevation_gain).magnitude),2))
-      suffer_score.append(results.suffer_score)
-      average_speed_mph.append(round(float(unithelper.miles_per_hour(results.average_speed).magnitude),2))
-      max_speed_mph.append(round(float(unithelper.miles_per_hour(results.max_speed).magnitude),2))
-      average_speed_kmh.append(round(float(unithelper.kilometers_per_hour(results.average_speed).magnitude),2))
-      max_speed_kmh.append(round(float(unithelper.kilometers_per_hour(results.max_speed).magnitude),2))
+    df = pd.DataFrame(data, columns=[
+        'id', 'name', 'start_date_local', 'elapsed_time_seconds', 'moving_time_seconds',
+        'average_watts', 'max_watts', 'average_cadence', 'distance_miles', 'distance_kilometers',
+        'minutes_per_mile_pace', 'minutes_per_kilometer_pace', 'sport_type', 'average_heartrate',
+        'max_heartrate', 'total_elevation_gain_feet', 'total_elevation_gain_meters', 'suffer_score',
+        'average_speed_mph', 'max_speed_mph', 'average_speed_kmh', 'max_speed_kmh'
+    ])
 
-    my_dict = {'id':id, 'name':name,'start_date_local':start_date_local, 'elapsed_time_seconds':elapsed_time_seconds, 'moving_time_seconds':moving_time_seconds
-               , 'sport_type': sport_type, 'distance_miles': distance_miles, 'distance_kilometers': distance_kilometers
-               , 'average_speed_mph':average_speed_mph, 'max_speed_mph':max_speed_mph, 'average_speed_kmh':average_speed_kmh
-               , 'max_speed_kmh':max_speed_kmh
-               , 'average_watts': average_watts, 'max_watts':max_watts
-               , 'average_cadence':average_cadence
-               , 'average_heartrate':average_heartrate, 'max_heartrate': max_heartrate
-               , 'total_elevation_gain_feet': total_elevation_gain_feet, 'total_elevation_gain_meters':total_elevation_gain_meters
-               , 'suffer_score':suffer_score
-               , 'minutes_per_mile_pace':minutes_per_mile_pace, 'minutes_per_kilometer_pace':minutes_per_kilometer_pace
-               }
+    if data_type == 'Cycling':
+        df = df.query('sport_type.str.contains("Ride")')
+    elif data_type == 'Running':
+        df = df.query('sport_type.str.contains("Run")')
+    elif data_type == 'Swimming':
+        df = df.query('sport_type.str.contains("Swim")')
+    else:
+        df = df
 
-    df = pd.DataFrame(my_dict)
+    if measurment_system == 'imperial':
+        df = df.drop(['distance_kilometers', 'minutes_per_kilometer_pace'
+                      ,'total_elevation_gain_meters','average_speed_kmh','max_speed_kmh'], axis=1)
+    else:
+        df = df.drop(['distance_miles', 'minutes_per_mile_pace'
+                      ,'total_elevation_gain_feet','average_speed_mph','max_speed_mph'], axis=1)
+
     return df
 
 
@@ -135,27 +116,32 @@ def intake():
 
     #Get form information.
     if request.method == 'POST':
-        session['data_type'] = request.form['data_type']
-        session['date_range'] = request.form['date_range']
-        session['measurment_system'] = request.form['measurment_system']
-        return redirect(url_for('planning'))
+        data_type = request.form['data_type']
+        date_range = request.form['date_range']
+        measurment_system = request.form['measurment_system']
+
+        date_ranges = {
+        'last_year': last_year,
+        'last_month': one_month_ago,
+        'last_week': one_week_ago,
+        'All':None
+        }
+
+        df = generate_table(date_ranges[f'{date_range}'],data_type,measurment_system)
+
+        csv_data = df.to_csv(index=False)
+
+        #Send the CSV data as a response with appropriate headers
+        return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=trainersterminal_data.csv"}
+        )
+        #return redirect(url_for('planning'))
     else:
         pass
 
     return render_template('intake.html', athlete_name=session['athlete_name'])
-
-#This will be page after intake
-@app.route('/planning')
-def planning():
-    #Form data
-    data_type = session['data_type']
-    training_type = session['training_type']
-    supplied_data = data_type
-    print(data_type)
-
-
-    template = render_template('planning.html', supplied_data=supplied_data)
-    return template
 
 @app.route('/')
 def index():
@@ -169,20 +155,6 @@ def index():
     #kudoscount = activity.kudos_count
 
     return render_template('index.html')
-
-#Currently unused.
-@app.route('/get_data/<activity_type>')
-def get_data(activity_type):
-    if activity_type == 'ride':
-        data = get_distance_data(session['ride_miles'])
-    elif activity_type == 'run':
-        data = get_distance_data(session['run_miles'])
-    elif activity_type == 'all':
-        data = get_distance_data(session['total_distance'])
-    else:
-        return 'Error'
-
-    return data
 
 @app.route('/authorize')
 def authorize():
@@ -202,9 +174,8 @@ def callback():
     print(code)
     client = stravalib.Client()
     access_token = client.exchange_code_for_token(client_id, client_secret, code)
-    #Only print for troubleshooting, dont use in dev.
-    #print(access_token)
     session['access_token'] = access_token['access_token']
+    print(session['access_token'])
     return redirect(url_for('intake'))
 
 @app.route('/logout')
